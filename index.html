@@ -1,0 +1,160 @@
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const ICARUS_CONTRACT_ADDRESS = '0xf012f402747e1e4715b7e496650243a29be204c7';
+const ICARUS_ABI = [{"inputs":[{"internalType":"contract IERC20","name":"_backToken","type":"address"},{"internalType":"address","name":"_factory","type":"address"},{"internalType":"address","name":"_swapRouter","type":"address"},{"internalType":"address","name":"_weth","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"tokenAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"ethAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"AddLiquidity","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"liquidity","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"community","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"marketing","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dev","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"SwapBack","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"address","name":"pair","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"side","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"circulatingSupply","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"Trade","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"NFTFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"_maxTxAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"_maxWalletToken","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"walletaddresses","type":"address[]"},{"internalType":"int256","name":"round","type":"int256"}],"name":"addHolders","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"addLiquidityEnabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pair","type":"address"}],"name":"addPair","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"backToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"canAddLiquidityBeforeLaunch","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"bool","name":"exempt","type":"bool"}],"name":"changeCanAddLiquidityBeforeLaunch","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"newinPeriod","type":"uint256"},{"internalType":"uint256","name":"newMinDistribution","type":"uint256"}],"name":"changeDistributionCriteria","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"gas","type":"uint256"}],"name":"changeDistributorSettings","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"bool","name":"exempt","type":"bool"}],"name":"changeIsDividendExempt","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"buyer","type":"address"}],"name":"checkWhitelist","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claimDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"clearStuckBalance","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"clearStuckEthBalance","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"communityFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"currentRound","outputs":[{"internalType":"enum Icarus.MintRound","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"pair","type":"address"}],"name":"delPair","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"distributeTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"dividendDistributor","outputs":[{"internalType":"contract DividendDistributor","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"doSwapBack","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"feeDenominator","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCirculatingSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getMinDistribution","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getMinPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getMinterLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"getPair","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"holderFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"inSwap","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"initializePair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isDividendExempt","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isFeeExempt","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isPair","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"launch","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"launchedAt","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"launchedAtTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"liquidityFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"marketingFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"shareholder","type":"address"}],"name":"pendingRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"shareholder","type":"address"}],"name":"readyToDistribute","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"rescueArbax","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"}],"name":"rescueToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"router","outputs":[{"internalType":"contract IDEXRouter","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bool","name":"_enabled","type":"bool"}],"name":"setAddLiquidityEnabled","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"round","type":"uint256"}],"name":"setCurrentBuyRound","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_communityWallet","type":"address"},{"internalType":"address","name":"_marketingWallet","type":"address"},{"internalType":"address","name":"_NFTWallet","type":"address"},{"internalType":"address","name":"_reserveWallet","type":"address"},{"internalType":"address","name":"_liqWallet","type":"address"},{"internalType":"address","name":"_teamWallet","type":"address"}],"name":"setFeeReceivers","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"bool","name":"exempt","type":"bool"}],"name":"setIsFeeExempt","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"maxWallPercent","type":"uint256"}],"name":"setMaxWalletPercent","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_holderFee","type":"uint256"},{"internalType":"uint256","name":"_liquidityFee","type":"uint256"},{"internalType":"uint256","name":"_communityFee","type":"uint256"},{"internalType":"uint256","name":"_marketingFee","type":"uint256"},{"internalType":"uint256","name":"_NFTFee","type":"uint256"}],"name":"setOverallFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_rewardToken","type":"address"}],"name":"setRewardToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"_enabled","type":"bool"}],"name":"setSwapBackSettings","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"setTxLimit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"swapEnabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDistributedAll","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"shareholder","type":"address"}],"name":"totalDistributedPerPerson","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFee","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelistedForRound","outputs":[{"internalType":"int256","name":"","type":"int256"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+
+const IcarusDashboard = () => {
+  const [provider, setProvider] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [tokenInfo, setTokenInfo] = useState({
+    totalSupply: '0',
+    totalDistributedAll: '0'
+  });
+  const [walletAddress, setWalletAddress] = useState('');
+  const [walletInfo, setWalletInfo] = useState({
+    balance: '0',
+    pendingRewards: '0',
+    readyToDistribute: false,
+    totalDistributedPerPerson: '0'
+  });
+  const [volumeData, setVolumeData] = useState({
+    day: '0',
+    week: '0',
+    month: '0',
+    year: '0',
+    allTime: '0'
+  });
+
+  useEffect(() => {
+    const initProvider = async () => {
+      const provider = new ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+      setProvider(provider);
+      const contract = new ethers.Contract(ICARUS_CONTRACT_ADDRESS, ICARUS_ABI, provider);
+      setContract(contract);
+    };
+    initProvider();
+  }, []);
+
+  useEffect(() => {
+    if (contract) {
+      fetchTokenInfo();
+      fetchVolumeData();
+    }
+  }, [contract]);
+
+  const fetchTokenInfo = async () => {
+    try {
+      const totalSupply = await contract.totalSupply();
+      const totalDistributedAll = await contract.totalDistributedAll();
+      setTokenInfo({
+        totalSupply: ethers.utils.formatEther(totalSupply),
+        totalDistributedAll: ethers.utils.formatEther(totalDistributedAll)
+      });
+    } catch (error) {
+      console.error('Error fetching token info:', error);
+    }
+  };
+
+  const fetchWalletInfo = async () => {
+    if (!ethers.utils.isAddress(walletAddress)) {
+      alert('Invalid wallet address');
+      return;
+    }
+    try {
+      const balance = await contract.balanceOf(walletAddress);
+      const pendingRewards = await contract.pendingRewards(walletAddress);
+      const readyToDistribute = await contract.readyToDistribute(walletAddress);
+      const totalDistributedPerPerson = await contract.totalDistributedPerPerson(walletAddress);
+      setWalletInfo({
+        balance: ethers.utils.formatEther(balance),
+        pendingRewards: ethers.utils.formatEther(pendingRewards),
+        readyToDistribute,
+        totalDistributedPerPerson: ethers.utils.formatEther(totalDistributedPerPerson)
+      });
+    } catch (error) {
+      console.error('Error fetching wallet info:', error);
+    }
+  };
+
+  const fetchVolumeData = async () => {
+    // This is a placeholder. In a real-world scenario, you'd need to fetch this data
+    // from a subgraph or by parsing events from the blockchain
+    setVolumeData({
+      day: '1000000',
+      week: '5000000',
+      month: '20000000',
+      year: '100000000',
+      allTime: '500000000'
+    });
+  };
+
+  const volumeChartData = [
+    { name: 'Day', Volume: parseFloat(volumeData.day) },
+    { name: 'Week', Volume: parseFloat(volumeData.week) },
+    { name: 'Month', Volume: parseFloat(volumeData.month) },
+    { name: 'Year', Volume: parseFloat(volumeData.year) },
+    { name: 'All Time', Volume: parseFloat(volumeData.allTime) }
+  ];
+
+  return (
+    <div className="p-4 space-y-4">
+      <h1 className="text-2xl font-bold">ICARUS Token Dashboard</h1>
+      
+      <Card>
+        <CardHeader>Token Metrics</CardHeader>
+        <CardContent>
+          <p>Total Supply: {tokenInfo.totalSupply} ICARUS</p>
+          <p>Total Distributed (All Time): {tokenInfo.totalDistributedAll} ICARUS</p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>Wallet Information</CardHeader>
+        <CardContent>
+          <div className="flex space-x-2 mb-4">
+            <Input 
+              placeholder="Enter wallet address" 
+              value={walletAddress} 
+              onChange={(e) => setWalletAddress(e.target.value)}
+            />
+            <Button onClick={fetchWalletInfo}>Submit</Button>
+          </div>
+          <p>Balance: {walletInfo.balance} ICARUS</p>
+          <p>Pending Rewards: {walletInfo.pendingRewards} ICARUS</p>
+          <p>Ready to Distribute: {walletInfo.readyToDistribute ? 'Yes' : 'No'}</p>
+          <p>Total Distributed to This Wallet: {walletInfo.totalDistributedPerPerson} ICARUS</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>Trading Volume</CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={volumeChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="Volume" stroke="#8884d8" />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="mt-4">
+            <p>Daily Volume: {volumeData.day} ICARUS</p>
+            <p>Weekly Volume: {volumeData.week} ICARUS</p>
+            <p>Monthly Volume: {volumeData.month} ICARUS</p>
+            <p>Yearly Volume: {volumeData.year} ICARUS</p>
+            <p>All Time Volume: {volumeData.allTime} ICARUS</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default IcarusDashboard;
